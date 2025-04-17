@@ -1,0 +1,37 @@
+name: fraud-feature-pipelines
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test_schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11.11'
+          
+      - name: install python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # Explicitly install Jupyter and kernel dependencies
+          pip install jupyter ipykernel
+          python -m ipykernel install --user --name=python3
+
+      - name: Verify kernel installation
+        run: jupyter kernelspec list
+
+      - name: Set execute permission on script
+        run: chmod +x ./src/02-module/scripts/run-fraud-feature-pipelines.sh
+
+      - name: execute python workflows from bash script
+        env: 
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: ./src/02-module/scripts/run-fraud-feature-pipelines.sh
